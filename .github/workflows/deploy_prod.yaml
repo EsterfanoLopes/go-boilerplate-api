@@ -1,0 +1,43 @@
+name: Deploy Prod
+on:
+  repository_dispatch:
+    types: [deploy-prod]
+jobs:
+  deploy_prod:
+    name: "Deploy PROD"
+    runs-on: ubuntu-18.04
+    env:
+      SLACK_CHANNEL: notifs-zap-aluguel
+      SLACK_ICON: https://raw.githubusercontent.com
+      SLACK_USERNAME: Go Boilerplate
+      SLACK_TITLE: Deploy Go Boilerplate
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+      MSG_MINIMAL: actions url
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_COLOR: '#dbdb48'
+          SLACK_MESSAGE: 'Deploying version `${{ github.event.client_payload.version }}` to `prod`'
+      - name: Open tunnel
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.TUNNEL_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TUNNEL_AWS_SECRET_ACCESS_KEY }}
+          CIRCLECI_KEY_TUNNEL: ${{ secrets.ID_RSA_CIRCLECI_TUNNEL }}
+        run: |
+            aws s3 cp s3://develop-br/scripts/circleci/circleci-v6-tunnel.sh $HOME/ && chmod +x $HOME/circleci-v6-tunnel.sh && $HOME/circleci-v6-tunnel.sh
+      - name: Deploy to k8s
+        env:
+          ENVIRONMENT: prod
+          VERSION: ${{ github.event.client_payload.version }}
+          K8S_CLUSTER: ${{ secrets.PROD_K8S_CLUSTER }}
+          K8S_TOKEN: ${{ secrets.PROD_K8S_TOKEN }}
+        run: ./deploy/trigger.sh
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_COLOR: '#3cc94b'
+          SLACK_MESSAGE: Deployed version `${{ github.event.client_payload.version }}` to `prod` successfully

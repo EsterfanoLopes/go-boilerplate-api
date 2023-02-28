@@ -1,0 +1,34 @@
+# OS stuffs
+.DS_Store
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# IDE stuffs
+.idea/
+.vscode/
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories
+vendor/
+
+go-boilerplate
+
+sonar-project.properties
+
+.scannerwork
+
+.env
+__debug_bin
+
+# swaggo unused yaml file
+docs/swagger/swagger.yaml

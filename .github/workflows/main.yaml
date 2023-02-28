@@ -1,0 +1,131 @@
+name: Main Flow
+on: [push]
+jobs:
+  tests:
+    name: "Tests"
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: szenius/set-timezone@v1.0
+        with:
+          timezoneLinux: "America/Recife"
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.17.3'
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-tests-${{ hashFiles('**/go.sum') }}
+      - run: make install
+      - run: make test
+  lint:
+    name: "Lint"
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.17.3'
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-lint-${{ hashFiles('**/go.sum') }}
+      - run: make install
+      - run: make lint
+  docker_build:
+    name: "Docker Build"
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - run: make docker/build
+      - run: mkdir -p docker-cache && docker save -o docker-cache/go-boilerplate.tar vivareal/go-boilerplate
+      - name: "Determine tag"
+        if: "startsWith(github.ref, 'refs/tags/v')"
+        id: "determine-tag"
+        run: "echo \"::set-output name=tag::${GITHUB_REF#refs/tags/}\""
+      - uses: actions/cache@v2
+        if: "startsWith(github.ref, 'refs/tags/v')"
+        with:
+          path: |
+            docker-cache
+          key: ${{ runner.os }}-docker-cache-${{ steps.determine-tag.outputs.tag }}
+  docker_push:
+    name: "Docker Push"
+    needs:
+      - tests
+      - lint
+      - docker_build
+    if: "startsWith(github.ref, 'refs/tags/v')"
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - name: "Determine tag"
+        id: "determine-tag"
+        run: "echo \"::set-output name=tag::${GITHUB_REF#refs/tags/}\""
+      - uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+      - uses: actions/cache@v2
+        with:
+          path: |
+            docker-cache
+          key: ${{ runner.os }}-docker-cache-${{ steps.determine-tag.outputs.tag }}
+      - run: docker load < docker-cache/go-boilerplate.tar
+      - run: make VERSION=${{ steps.determine-tag.outputs.tag }} tag
+      - run: make VERSION=${{ steps.determine-tag.outputs.tag }} push
+  deploy_qa:
+    name: "Deploy QA"
+    needs: docker_push
+    if: "startsWith(github.ref, 'refs/tags/v')"
+    runs-on: ubuntu-18.04
+    env:
+      SLACK_CHANNEL: notifs-slack
+      SLACK_ICON: https://raw.githubusercontent.com/
+      SLACK_USERNAME: Go Boilerplate
+      SLACK_TITLE: Deploy Go Boilerplate
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+      MSG_MINIMAL: actions url
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - name: "Determine tag"
+        id: "determine-tag"
+        run: "echo \"::set-output name=tag::${GITHUB_REF#refs/tags/}\""
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_COLOR: '#dbdb48'
+          SLACK_MESSAGE: 'Deploying version `${{ steps.determine-tag.outputs.tag }}` to `qa`'
+      - name: Open tunnel
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.TUNNEL_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TUNNEL_AWS_SECRET_ACCESS_KEY }}
+          CIRCLECI_KEY_TUNNEL: ${{ secrets.ID_RSA_CIRCLECI_TUNNEL }}
+        run: |
+            aws s3 cp s3://develop-br/scripts/circleci/circleci-v6-tunnel.sh $HOME/ && chmod +x $HOME/circleci-v6-tunnel.sh && $HOME/circleci-v6-tunnel.sh
+      - name: Deploy to k8s
+        env:
+          ENVIRONMENT: qa
+          VERSION: ${{ steps.determine-tag.outputs.tag }}
+          K8S_CLUSTER: ${{ secrets.QA_K8S_CLUSTER }}
+          K8S_TOKEN: ${{ secrets.QA_K8S_TOKEN }}
+        run: ./deploy/trigger.sh
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_COLOR: '#439fe0'
+          SLACK_MESSAGE: Deployed version `${{ steps.determine-tag.outputs.tag }}` to `qa` successfully

@@ -1,0 +1,26 @@
+version: "3"
+
+services:
+  postgres:
+    image: postgres:12.5-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: database
+    restart: always
+  localstack:
+    image: localstack/localstack:0.12.12
+    ports:
+      - "4576:4566"
+    environment:
+      - SERVICES=sqs,s3
+      - HOSTNAME=localhost
+      - START_WEB=0
+      - FORCE_NONINTERACTIVE=true
+      - LAMBDA_REMOTE_DOCKER=0
+    volumes:
+        - ./test/util/aws:/docker-entrypoint-initaws.d
+    restart: always
+  

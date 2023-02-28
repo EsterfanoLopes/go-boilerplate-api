@@ -1,0 +1,13 @@
+{
+    "saveAndRunExt": {
+        "commands": [
+            {
+                "match": "\\.go$",
+                "isShellCommand": false,
+                "cmd": "workbench.action.debug.restart"
+            }
+        ]
+    },
+    "go.lintTool": "staticcheck",
+    "go.lintFlags": ["--enable-all", "--new"]
+}
