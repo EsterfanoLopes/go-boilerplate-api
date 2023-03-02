@@ -61,8 +61,6 @@ require (
 	honnef.co/go/tools v0.4.2
 )
 
-require github.com/jackc/pgx/v4 v4.14.0
-
 require (
 	github.com/DataDog/datadog-agent/pkg/obfuscate v0.43.0 // indirect
 	github.com/DataDog/datadog-agent/pkg/remoteconfig/state v0.43.0 // indirect
@@ -87,7 +85,6 @@ require (
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgproto3/v2 v2.3.2 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
-	github.com/jackc/pgtype v1.9.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
