@@ -47,7 +47,7 @@ require (
 	github.com/swaggo/http-swagger v1.3.3
 	github.com/swaggo/swag v1.8.10
 	github.com/tinylib/msgp v1.1.8 // indirect
-	github.com/vektra/mockery/v2 v2.20.2
+	github.com/vektra/mockery/v2 v2.23.1
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	golang.org/x/crypto v0.6.0 // indirect
 	golang.org/x/mod v0.8.0 // indirect
@@ -60,8 +60,6 @@ require (
 	gopkg.in/DataDog/dd-trace-go.v1 v1.48.0
 	honnef.co/go/tools v0.4.2
 )
-
-require github.com/jackc/pgx/v4 v4.14.0
 
 require (
 	github.com/DataDog/datadog-agent/pkg/obfuscate v0.43.0 // indirect
@@ -81,13 +79,14 @@ require (
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/iancoleman/strcase v0.2.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgproto3/v2 v2.3.2 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
-	github.com/jackc/pgtype v1.9.0 // indirect
+	github.com/jinzhu/copier v0.3.5 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
